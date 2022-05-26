@@ -16,6 +16,4 @@ function get_temp_data(location)
     return temp_data    
 end
 
-temp_data = get_temp_data(location)
-
-
+temp_data_api = get_temp_data(location)
