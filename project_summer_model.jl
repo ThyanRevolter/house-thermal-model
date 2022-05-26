@@ -22,7 +22,7 @@ function optimize_price(temp_diff)
     @constraint(m, T_indoor .>= 21.1 - temp_diff)
     
     for i = 1:time_period-1
-        @NLconstraint(m, M*c*(T_indoor[i+1] - T_indoor[i]) == Qin[i]*3600000 - abs(T_indoor[i] - temp_data[i])/Req)
+        @NLconstraint(m, M*c*(T_indoor[i+1] - T_indoor[i]) == Qin[i]*3600000 -  (T_indoor[i] - temp_data[i])/Req)
     end    
     optimize!(m)
     plot(hcat(value.(Qin),value.(T_indoor),temp_data), layout = (3,1), label=string("temp diff", temp_diff))
