@@ -2,9 +2,9 @@ using LinearAlgebra, JuMP, Clp, Plots, Ipopt, Gurobi
 
 include("thermal_unit_data.jl")
 include("get_weather_data.jl")
+T_indoor = temp_data_api
 
-# nl_solver = optimizer_with_attributes(Ipopt.Optimizer, "print_level"=>0)
-# minlp_solver = optimizer_with_attributes(Juniper.Optimizer, "nl_solver"=>nl_solver)
+
 m = Model(Clp.Optimizer)
 # Decision variables
 # Indoor temperature
@@ -34,11 +34,11 @@ optimize!(m)
 Cost, T_in, Qin_heat, Qin_cool =  objective_value(m), value.(T_indoor), value.(Qin_heat), value.(Qin_cool)
 
 
-plot(T_in)
-plot!(Tout)
-hline!([Tbase-5*0.556], linestyle=:dash)
-hline!([Tbase+5*0.556], linestyle=:dash)
-hline!([Tbase], linestyle=:dash)
+plot(T_in, label="Indoor Temp ⁰C")
+plot!(Tout, label="Indoor Temp ⁰C")
+hline!([Tbase-5*0.556], linestyle=:dash, label="Lower limt ⁰C")
+hline!([Tbase+5*0.556], linestyle=:dash, label="Upper limt ⁰C")
+hline!([Tbase], linestyle=:dash, label="Set point ⁰C")
 
-plot(Qin_heat*0.000277777778)
-plot!(Qin_cool*0.000277777778)
+plot(Qin_heat*0.000277777778, label="Heating Power")
+plot!(Qin_cool*0.000277777778, label="Cooling Power")
