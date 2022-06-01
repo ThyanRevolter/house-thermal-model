@@ -2,7 +2,8 @@ using LinearAlgebra, JuMP, Clp, Plots
 
 include("thermal_unit_data.jl")
 include("get_weather_data.jl")
-
+η_cool = 0.95
+η_heat = 0.80
 Tout = temp_data_api
 
 # m = Model(Clp.Optimizer)
@@ -50,10 +51,9 @@ Tout = temp_data_api
 
 comfort_range_range = [i*0.556 for i = 0:5]
 watt_ranges = [i for i = 500:10:7000]
-watt_ranges
+Tchange_range = LinRange(0.01,5,40)
 
-
-function get_feasible_upperbound(comfort_range, upper_bound)
+function get_feasible_upperbound(comfort_range, upper_bound, ΔTchange)
     m = Model(Clp.Optimizer)
     set_optimizer_attribute(m, "LogLevel", 0)
     # Decision variables
@@ -71,6 +71,10 @@ function get_feasible_upperbound(comfort_range, upper_bound)
     @constraint(m, T_indoor .>= Tbase-comfort_range)
     # # Indoor temp Upper bound
     @constraint(m, T_indoor .<= Tbase+comfort_range)
+    # Per hour temperature should not change more than ΔTchange temperature
+    @constraint(m, [i=1:time_period], T_indoor[i+1] - T_indoor[i] <=  ΔTchange)
+    # Per hour temperature should not change more than ΔTchange temperature
+    @constraint(m, [i=1:time_period], T_indoor[i+1] - T_indoor[i] >=  -ΔTchange)
     # Thermal model of the house
     @constraint(m, [i=1:time_period], M*c*T_indoor[i+1] == M*c*T_indoor[i] + (Qin_heat[i] - Qin_cool[i] - (T_indoor[i] - Tout[i])/Req))
     # # Energy from HVAC heating for the thermostat
@@ -78,9 +82,9 @@ function get_feasible_upperbound(comfort_range, upper_bound)
     # # Energy from HVAC cooling for the thermostat
     @constraint(m, [t=1:time_period], Qin_cool[t] <= Mdot*c*(T_indoor[t] - 10))
     # # Energy from HVAC heating for the thermostat
-    @constraint(m, [t=1:time_period], Qin_heat[t]*joule_watt <= upper_bound)
+    @constraint(m, [t=1:time_period], Qin_heat[t]*joule_watt <= η_heat*upper_bound)
     # # Energy from HVAC cooling for the thermostat
-    @constraint(m, [t=1:time_period], Qin_cool[t]*joule_watt <= upper_bound)
+    @constraint(m, [t=1:time_period], Qin_cool[t]*joule_watt <= η_cool*upper_bound)
     # # solve model
     optimize!(m)
     if termination_status(m) == OPTIMAL
@@ -97,20 +101,21 @@ min_load_price = zeros(length(comfort_range_range))
 counter = 0
 for comfort_range in comfort_range_range
     counter = counter + 1
-    for watt in watt_ranges
-        status, objective_value = get_feasible_upperbound(comfort_range, watt)
+    for watt in watt_ranges, Tchange in Tchange_range         
+        status, objective_value = get_feasible_upperbound(comfort_range, watt, Tchange)
         if status
             min_load_price[counter] = objective_value
-            println("Comfort Range: ", comfort_range, " Minimum peak load in Watt ", watt)
+            println("Comfort Range: ", comfort_range, " Minimum peak load in Watt ", watt," Minimum Temperature change ", Tchange)
             println("Minimum price for the load " , objective_value)
-            inf_status, inf_objective_val = get_feasible_upperbound(comfort_range, 99999999999999999)
+            inf_status, inf_objective_val = get_feasible_upperbound(comfort_range, 99999999999999999,99999999999999999)
             println("Minimum price possible " , inf_objective_val)
             println()
             min_power_comfort[counter] = watt   
             break;
-        end
+        end        
     end    
 end
 
-plot(comfort_range_range, min_power_comfort, label="Load")
-plot!(twinx(), comfort_range_range, min_load_price, label="Price")
+plot(comfort_range_range, min_power_comfort, label="Load", linecolor=:red)
+plot!(twinx(), comfort_range_range, min_load_price, label="Price", size=(1800/3,1000/3))
+savefig("Minimum price and minimum load.png")
