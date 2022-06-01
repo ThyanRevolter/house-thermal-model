@@ -1,6 +1,4 @@
-using LinearAlgebra, JuMP, Clp, Plots, Ipopt
-
-include("get_weather_data.jl")
+using LinearAlgebra
 
 time_period = 24
 
@@ -14,18 +12,25 @@ cost[7:15] .= mid_peak
 cost[16:20] .= on_peak
 cost[21:24] .= off_peak
 
-# temp data
+# temp data simulated
 temp_data = [58.9, 58.5, 58.3, 57.7, 57. , 59.7, 65.2, 70.8, 75.6, 79.2, 81.5,
 83. , 83.6, 82.7, 81.5, 81 , 78.1, 74.3, 69.6, 65.5, 62.7, 60.5,
 59.3, 58.7] 
 
-Tout = (temp_data .- 32)*0.5556
+temp_data = (temp_data .- 32)*0.5556
 
-temp_data_api = get_temp_data(location)
+# conversion factor Joule/hr to watts
+joule_watt = 0.000277777778
+Tbase = 21
 
-plot(Tout)
-plot!(temp_data_api)
+# Heating efficiency
+heat_coeff = 0.80
 
+# cooling efficiency
+cool_coeff = 0.70
+
+# comfort range
+comfort = 5*0.556
 # Thermal constant
 # -------------------------------
 # converst radians to degrees
@@ -78,3 +83,4 @@ densAir = 1.2250;
 M = (lenHouse*widHouse*htHouse+tan(pitRoof)*widHouse*lenHouse)*densAir;
 # -------------------------------
 mdot = 1
+c

@@ -1,4 +1,4 @@
-using HTTP, JSON, Plots
+using HTTP, JSON
 
 location = "portland"
 
