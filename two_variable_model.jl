@@ -53,7 +53,7 @@ comfort_range_range = [i*0.556 for i = 0:5]
 watt_ranges = [i for i = 500:10:7000]
 Tchange_range = LinRange(0.01,5,40)
 
-function get_feasible_upperbound(comfort_range, upper_bound, ΔTchange)
+function hvac_optimizer(comfort_range, power_upper_bound, ΔTchange)
     m = Model(Clp.Optimizer)
     set_optimizer_attribute(m, "LogLevel", 0)
     # Decision variables
@@ -66,7 +66,7 @@ function get_feasible_upperbound(comfort_range, upper_bound, ΔTchange)
     # Total cost of energy consumed
     @objective(m, Min, sum(cost[i]*(Qin_heat[i] + Qin_cool[i])*joule_watt*0.001 for i = 1:time_period))
     # Inital temperature
-    @constraint(m, T_indoor[1] == 21)
+    @constraint(m, T_indoor[1] == Tbase)
     # # Indoor temp lower bound
     @constraint(m, T_indoor .>= Tbase-comfort_range)
     # # Indoor temp Upper bound
@@ -82,9 +82,9 @@ function get_feasible_upperbound(comfort_range, upper_bound, ΔTchange)
     # # Energy from HVAC cooling for the thermostat
     @constraint(m, [t=1:time_period], Qin_cool[t] <= Mdot*c*(T_indoor[t] - 10))
     # # Energy from HVAC heating for the thermostat
-    @constraint(m, [t=1:time_period], Qin_heat[t]*joule_watt <= η_heat*upper_bound)
+    @constraint(m, [t=1:time_period], Qin_heat[t]*joule_watt <= η_heat*power_upper_bound)
     # # Energy from HVAC cooling for the thermostat
-    @constraint(m, [t=1:time_period], Qin_cool[t]*joule_watt <= η_cool*upper_bound)
+    @constraint(m, [t=1:time_period], Qin_cool[t]*joule_watt <= η_cool*power_upper_bound)
     # # solve model
     optimize!(m)
     if termination_status(m) == OPTIMAL
@@ -102,12 +102,12 @@ counter = 0
 for comfort_range in comfort_range_range
     counter = counter + 1
     for watt in watt_ranges, Tchange in Tchange_range         
-        status, objective_value = get_feasible_upperbound(comfort_range, watt, Tchange)
+        status, objective_value = hvac_optimizer(comfort_range, watt, Tchange)
         if status
             min_load_price[counter] = objective_value
             println("Comfort Range: ", comfort_range, " Minimum peak load in Watt ", watt," Minimum Temperature change ", Tchange)
             println("Minimum price for the load " , objective_value)
-            inf_status, inf_objective_val = get_feasible_upperbound(comfort_range, 99999999999999999,99999999999999999)
+            inf_status, inf_objective_val = hvac_optimizer(comfort_range, 99999999999999999,99999999999999999)
             println("Minimum price possible " , inf_objective_val)
             println()
             min_power_comfort[counter] = watt   
