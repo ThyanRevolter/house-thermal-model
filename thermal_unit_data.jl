@@ -2,6 +2,10 @@ using LinearAlgebra
 
 time_period = 24
 
+# efficiency
+η_cool = 0.95
+η_heat = 0.80
+
 # electricity price
 on_peak = 20.448
 mid_peak = 15.119
@@ -18,6 +22,7 @@ temp_data = [58.9, 58.5, 58.3, 57.7, 57. , 59.7, 65.2, 70.8, 75.6, 79.2, 81.5,
 83. , 83.6, 82.7, 81.5, 81 , 78.1, 74.3, 69.6, 65.5, 62.7, 60.5,
 59.3, 58.7] 
 
+# converting F to C of temp_data
 temp_data = (temp_data .- 32)*C2F
 
 # conversion factor Joule/hr to watts

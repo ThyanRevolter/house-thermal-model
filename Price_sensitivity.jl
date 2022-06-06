@@ -45,5 +45,5 @@ for i = 1:length(comfort_range)
 end
 
 plot(comfort_range./0.556,cost_per_temp./100, title="Cost Sensitvity of HVAC Comfort Range", xlabel="Comfort level range (±ᵒF)", ylabel="Cost per day \$\$", legend = false)
-savefig("Cost_sensitvity.png")
+savefig("plots\\Cost_sensitvity.png")
 
