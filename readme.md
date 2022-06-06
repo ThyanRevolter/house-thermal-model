@@ -26,4 +26,10 @@ Pkg.add("HTTP")
 This file compares the temperature and power profile of minimum |5| and maximum |0| comfort ranges and saves the figures to the folder */plots/*. 
 
 ## File "two_variable_model.jl"
-This file
+This file contains the code to optimize the price over multiple comfort ranges to find the minimum feasible one and compares the minimum price possible without any power limit and with the minimum possible limit.
+
+## File "peak_load_min_plot.jl"
+This code is used to get the plot the sensitivity analysis of variying comfort ranges and the corresponding price savings.
+
+## File "Price_sensitivity.jl"
+This code compares various comfort ranges and their corresponding cost savings.
