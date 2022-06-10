@@ -34,9 +34,8 @@ comfort_range_weekend = generate_comfort_range(1,5,false)
 status, cost, T_in, Qin_heat_value, Qin_cool_value  = hvac_optimizer(comfort_range_weekday, 999999999, Tout)
 plot_temp_profile_graph(T_in, Tout, Tbase, comfort_range_weekday, string("plots\\Temp_profile_weekday"))
 plot_power_profile(Qin_heat_value, Qin_cool_value, string("plots\\Power_profile_cmfrt_weekday"))
-plot_power_profile(Mdot*c*([50 for i =1:time_period] - T_in), Mdot*c*(T_in - [10 for i =1:time_period]), string("plots\\Power_profile_cmfrt_weekday_relax"))
 
 
-status1, cost1, T_in1, Qin_heat_value1, Qin_cool_value1  = hvac_optimizer(comfort_range_weekend, 999999999, Tout)
-plot_temp_profile_graph(T_in1, Tout, Tbase, comfort_range_weekend, string("plots\\Temp_profile_weekend"))
-plot_power_profile(Qin_heat_value1, Qin_cool_value1, string("plots\\Power_profile_cmfrt_weekend"))
+status, cost, T_in, Qin_heat_value, Qin_cool_value  = hvac_optimizer(comfort_range_weekend, 999999999, Tout)
+plot_temp_profile_graph(T_in, Tout, Tbase, comfort_range_weekend, string("plots\\Temp_profile_weekend"))
+plot_power_profile(Qin_heat_value, Qin_cool_value, string("plots\\Power_profile_cmfrt_weekend"))

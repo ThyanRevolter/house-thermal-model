@@ -99,7 +99,7 @@ deltaT = 0.556*4
 @constraint(m, T_indoor .<= Tbase +deltaT)
 # @constraint(m, Ts .== 20)C
 # @constraint(m, Qin[1] == 0)
-@constraint(m, Qin[end] == Qin[1])
+# @constraint(m, Qin[end] == Qin[1])
 
 @NLconstraint(m, [i=1:time_period-1], T_indoor[i+1] == T_indoor[i] + (1/(M*c))*((Qin[i])*3600 - (T_indoor[i] - Tout[i])/(Req)))
 @NLconstraint(m, [t=1:time_period], Qin[t] == mdot*c*(Ts[t] - T_indoor[t]))
@@ -117,14 +117,14 @@ T_in = value.(T_indoor)
 Q_in = abs.(value.(Qin))
 Ts = value.(Ts)
 
-plot(hcat(T_in, (Q_in[1:end])), layout = (2,1))
-plot!(T_in)
+# plot(hcat(T_in, (Q_in[1:end])), layout = (2,1))
+plot(T_in)
 plot!(Tout)
-plot!(Ts, legend = false)
+plot!(Ts)
 hline!([Tbase-5*0.556], linestyle=:dash)
 hline!([Tbase+5*0.556], linestyle=:dash)
 hline!([Tbase], linestyle=:dash)
 
-# plot(Q_in[1:end-1])
+plot(Q_in[1:end])
 # savefig("Power.png")
 
