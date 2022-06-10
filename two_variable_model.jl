@@ -77,7 +77,7 @@ function hvac_optimizer(comfort_range, power_upper_bound, ΔTchange)
     @constraint(m, [i=1:time_period], T_indoor[i+1] - T_indoor[i] >=  -ΔTchange)
     # Thermal model of the house
     @constraint(m, [i=1:time_period], M*c*T_indoor[i+1] == M*c*T_indoor[i] + (Qin_heat[i] - Qin_cool[i] - (T_indoor[i] - Tout[i])/Req))
-    # # Energy from HVAC heating for the thermostat
+    # Energy from HVAC heating for the thermostat   
     @constraint(m, [t=1:time_period], Qin_heat[t] <= Mdot*c*(50 - T_indoor[t]))
     # # Energy from HVAC cooling for the thermostat
     @constraint(m, [t=1:time_period], Qin_cool[t] <= Mdot*c*(T_indoor[t] - 10))
@@ -88,7 +88,8 @@ function hvac_optimizer(comfort_range, power_upper_bound, ΔTchange)
     # # solve model
     optimize!(m)
     if termination_status(m) == OPTIMAL
-        return true, objective_value(m)
+        Cost, T_in, Qin_heat_value, Qin_cool_value =  objective_value(m), value.(T_indoor)[1:end-1], value.(Qin_heat), value.(Qin_cool)
+        return true, Cost, T_in, Qin_heat_value, Qin_cool_value
     else
         return false, 0
     end
@@ -98,23 +99,31 @@ end
 min_power_comfort = zeros(length(comfort_range_range))
 min_load_price = zeros(length(comfort_range_range))
 
+min_power_comfort = zeros(length(comfort_range_range))
+min_load_price = zeros(length(comfort_range_range))
 counter = 0
 for comfort_range in comfort_range_range
-    counter = counter + 1
-    for watt in watt_ranges, Tchange in Tchange_range         
-        status, objective_value = hvac_optimizer(comfort_range, watt, Tchange)
+    global counter = counter + 1
+    for watt in watt_ranges       
+        status, objective_value, T_in, Qin_heat, Qin_cool = hvac_optimizer([comfort_range for i = 1:time_period], watt, Tout)
         if status
+            plot_temp_profile_graph(T_in, Tout, Tbase, [comfort_range for i = 1:time_period], string("plots\\Temp_profile_",comfort_range/0.556,"_cmfrt"))
+            plot_power_profile(Qin_heat,Qin_cool,string("plots\\Power_profile_",comfort_range/0.556,"_cmfrt") )
             min_load_price[counter] = objective_value
-            println("Comfort Range: ", comfort_range, " Minimum peak load in Watt ", watt," Minimum Temperature change ", Tchange)
+            println("Comfort Range: ", comfort_range/0.556, " Minimum peak load in Watt ", watt)
             println("Minimum price for the load " , objective_value)
-            inf_status, inf_objective_val = hvac_optimizer(comfort_range, 99999999999999999,99999999999999999)
+            inf_status, inf_objective_val, T_in, Qin_heat, Qin_cool = hvac_optimizer([comfort_range for i = 1:time_period], 99999999999999999, Tout)
             println("Minimum price possible " , inf_objective_val)
             println()
-            min_power_comfort[counter] = watt   
+            min_power_comfort[counter] = watt
             break;
         end        
     end    
 end
+
+# plot(comfort_range_range, min_power_comfort, label="Load", linecolor=:red)
+# plot!(twinx(), comfort_range_range, min_load_price, label="Price", size=(1800/3,1000/3))
+# savefig("Minimum price and minimum load.png")
 
 plot(comfort_range_range, min_power_comfort, label="Load", linecolor=:red)
 plot!(twinx(), comfort_range_range, min_load_price, label="Price", size=(1800/3,1000/3))
