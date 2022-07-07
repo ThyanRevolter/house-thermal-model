@@ -68,7 +68,6 @@ function hvac_optimizer(comfort_range, power_upper_bound, Tout)
 end
 
 
-
 # this sweeps the comfort range from 0-5 F
 comfort_range_range = [i*0.556 for i = 0:5]
 # this sweeps the comfort range from 500 to 7000 watt in increments of 5
